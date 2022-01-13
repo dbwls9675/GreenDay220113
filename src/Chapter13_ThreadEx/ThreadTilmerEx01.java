@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 
 class TimerThread extends Thread {
 	JLabel timJLabel;
+	boolean isPause = false;
 
 	public TimerThread(JLabel timerLabel) {
 		this.timJLabel = timerLabel;
@@ -33,15 +34,38 @@ class TimerThread extends Thread {
 				Thread.sleep(1000 / 6); // 1000=1초 100=0.1초, 1초씩 println이 찍힘
 			} catch (InterruptedException e) {
 				e.printStackTrace();
+			} // 반복문이 끝나면 쓰레드도 종료된다.
+			if (isPause) {
+				synchronized (this) {
+					try {
+						System.out.println("멈춤....");
+						this.wait();
+						System.out.println("재실행....");
+					} catch (InterruptedException e) {
+
+						e.printStackTrace();
+					}
+				}
 			}
+		}
+	}
+
+	public void pauseThread() {
+		isPause = true; // true or false로 stop, replay구현
+	}
+
+	public void replayThread() {
+		synchronized (this) {
+			isPause = false;
+			this.notifyAll();
 		}
 	}
 }
 
-public class ThreadTilmerEx extends JFrame {
+public class ThreadTilmerEx01 extends JFrame {
 	JPanel contentPan = new JPanel();
 
-	public ThreadTilmerEx() {
+	public ThreadTilmerEx01() {
 		contentPan.setBackground(Color.white);
 		this.setContentPane(contentPan);
 
@@ -70,20 +94,21 @@ public class ThreadTilmerEx extends JFrame {
 		stopBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// 타이머가 일시 중지하도록 Thread 객체에 요청한다.
-
+				th.pauseThread();
 			}
+
 		});
 
 		playBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// 타이머가 재실행 하도록 Thread 객체에 요청한다.
-
+				th.replayThread();
 			}
 		});
 	}
 
 	public static void main(String[] args) {
-		new ThreadTilmerEx().setVisible(true);
+		new ThreadTilmerEx01().setVisible(true);
 
 	}
 
